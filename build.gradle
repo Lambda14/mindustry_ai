@@ -1,0 +1,118 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    mindustryVersion = 'v157'
+}
+
+// Download Mindustry JAR if not present
+task downloadMindustry {
+    doLast {
+        def mindustryDir = file("$rootDir/libs")
+        mindustryDir.mkdirs()
+        
+        def mindustryJar = file("$mindustryDir/mindustry-core.jar")
+        if (!mindustryJar.exists()) {
+            println "Downloading Mindustry core..."
+            downloadFile(
+                "https://github.com/Anuken/Mindustry/releases/download/${mindustryVersion}/Mindustry.jar",
+                mindustryJar
+            )
+        }
+        
+        def arcJar = file("$mindustryDir/arc-core.jar")
+        if (!arcJar.exists()) {
+            println "Downloading Arc core..."
+            downloadFile(
+                "https://github.com/Anuken/Arc/releases/download/${mindustryVersion}/arc-core.jar",
+                arcJar
+            )
+        }
+    }
+}
+
+void downloadFile(String url, File dest) {
+    try {
+        new URL(url).withInputStream { input ->
+            dest.withOutputStream { output ->
+                output << input
+            }
+        }
+        println "Downloaded: ${dest.name}"
+    } catch (Exception e) {
+        println "WARNING: Could not download ${url}: ${e.message}"
+        println "Building without Mindustry dependency - JAR will only contain mod classes"
+    }
+}
+
+dependencies {
+    // Mindustry API (compile-only, provided at runtime)
+    compileOnly fileTree(dir: 'libs', include: '*.jar')
+    
+    // Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+    test {
+        java {
+            srcDir 'tests'
+        }
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+    }
+}
+
+// Create mod JAR - NO external dependencies, pure Java + Mindustry runtime
+task jarMod(type: Jar) {
+    dependsOn downloadMindustry
+    archiveFileName = "ai-agent-mod.jar"
+    
+    from sourceSets.main.output
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    manifest {
+        attributes(
+            'Implementation-Title': 'AI Agent Mod',
+            'Implementation-Version': '1.0.0'
+        )
+    }
+}
+
+// Deploy task
+task deploy {
+    dependsOn jarMod
+    doLast {
+        def modsDir = file(System.getProperty("user.home") + "/.local/share/Mindustry/mods/")
+        if (!modsDir.exists()) {
+            modsDir = file(System.getProperty("user.home") + "/.mindustry/mods/")
+        }
+        copy {
+            from jarMod.outputs
+            into modsDir
+        }
+        println "Mod deployed to ${modsDir}"
+    }
+}

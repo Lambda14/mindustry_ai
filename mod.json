@@ -1,0 +1,10 @@
+{
+  "name": "ai-agent-mod",
+  "displayName": "AI Agent Mod",
+  "author": "AI Agent",
+  "description": "REST API for AI agents to observe and control Mindustry. Zero external dependencies.",
+  "version": "1.0.1",
+  "minGameVersion": 154,
+  "main": "aiagentmod.AIAgentMod",
+  "java": true
+}

@@ -1,0 +1,19 @@
+# Build output
+build/
+
+# Dependencies
+lib/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+stubs/
