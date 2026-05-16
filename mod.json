@@ -1,0 +1,10 @@
+{
+  "name": "ai-agent-mod",
+  "displayName": "AI Agent Mod",
+  "author": "AI Agent",
+  "description": "REST API for AI agents to observe and control Mindustry. Provides HTTP endpoints for game state, player control, unit commands, building management, and resource monitoring.",
+  "version": "1.0.0",
+  "minGameVersion": 154,
+  "main": "aiagentmod.AIAgentMod",
+  "java": true
+}

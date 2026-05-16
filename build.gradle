@@ -1,0 +1,83 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository' }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url 'https://jitpack.io' }
+}
+
+ext {
+    mindustryVersion = 'v157.4'
+    arcVersion = 'v157'
+}
+
+dependencies {
+    // Mindustry core
+    compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:server:$mindustryVersion"
+    
+    // Arc framework
+    compileOnly "com.github.Anuken.Arc:arc-core:$arcVersion"
+    
+    // Embedded HTTP server
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    
+    // JSON processing
+    implementation 'org.json:json:20231013'
+    
+    // Testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.6.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.6.0'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+    test {
+        java {
+            srcDir 'tests'
+        }
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+// Create mod JAR with dependencies
+task jarMod(type: Jar) {
+    archiveFileName = "ai-agent-mod.jar"
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Deploy task - copies JAR to Mindustry mods folder
+task deploy {
+    doLast {
+        copy {
+            from jarMod.outputs
+            into System.getProperty("user.home") + "/.local/share/Mindustry/mods/"
+        }
+        println "Mod deployed to ~/.local/share/Mindustry/mods/"
+    }
+}
+
+build.dependsOn jarMod
